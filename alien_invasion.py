@@ -1,10 +1,13 @@
 import sys
+from time import sleep
+
 import pygame
 
 from src.settings import Settings
 from src.ship import Ship
 from src.bullet import Bullet
 from src.alien import Alien
+from src.game_stats import GameStats
 
 
 class AlienInvasion:
@@ -20,19 +23,27 @@ class AlienInvasion:
             (self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Alien Invasion")
 
+        # create  an instance  to store game statistics
+        self.stats = GameStats(self)
+
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
 
         self._create_fleet()
 
+        # Start Alien invasion in an active state
+        self.game_active = True
+
     def run_game(self):
         """Start the main loop for the game."""
         while True:
             self._check_events()
-            self.ship.update()
-            self._update_bullets()
-            self._update_aliens()
+            if self.game_active:
+                self.ship.update()
+                self._update_bullets()
+                self._update_aliens()
+
             self._update_screen()
             self.clock.tick(60)
 
@@ -75,10 +86,6 @@ class AlienInvasion:
         # Update bullet positions.
         self.bullets.update()
 
-        # Check if any bullets that have hit aliens
-        # if so, get rid of the bullet and the alien
-        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
-
         # Get rid of bullets that have disappeared.
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
@@ -87,10 +94,35 @@ class AlienInvasion:
         self._check_bullet_alien_collisions()
 
     def _check_bullet_alien_collisions(self):
-        if len(self.aliens) == 0:
+        """Respond to bullet-alien collisions."""
+        # Check if any bullets that have hit aliens
+        # if so, get rid of the bullet and the alien
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+
+        if not self.aliens:
             # Destroy existing bullets and create new fleet.
             self.bullets.empty()
             self._create_fleet()
+
+    def _ship_hit(self):
+        """Respond to the ship being hit by an alien."""
+        if self.stats.ships_left > 0:
+            # Decrement ships_left
+            self.stats.ships_left -= 1
+
+            # Get rid of any remaining bullets and aliens.
+            self.bullets.empty()
+            self.aliens.empty()
+
+            # create a new fleet and center the ship.
+            self._create_fleet()
+            self.ship.center_ship()
+
+            # pause
+            sleep(0.5)
+
+        else:
+            self.game_active = False
 
     def _create_fleet(self):
         """Create the fleet of aliens."""
@@ -122,6 +154,7 @@ class AlienInvasion:
         for alien in self.aliens.sprites():
             if alien.check_edges():
                 self._change_fleet_direction()
+                break
 
     def _change_fleet_direction(self):
         """Drop the entire fleet and change the fleet's direction."""
@@ -137,14 +170,25 @@ class AlienInvasion:
 
         # check for alien-ship collision
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
-            print("Ship hit!!!")
+            self._ship_hit()
+
+        # Look for aliens hitting the bottom of the screen
+        self._check_aliens_bottom()
+
+    def _check_aliens_bottom(self):
+        """Check if any aliens have reached the bottom of the screen."""
+        for alien in self.aliens.sprites():
+            if alien.rect.bottom >= self.settings.screen_height:
+                # Treat this as if the ship was hit.
+                self._ship_hit()
+                break
 
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
-        self.ship.blitme()
+        self.ship.blit_me()
         self.aliens.draw(self.screen)
 
         pygame.display.flip()
