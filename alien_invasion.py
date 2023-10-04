@@ -84,6 +84,9 @@ class AlienInvasion:
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
 
+        self._check_bullet_alien_collisions()
+
+    def _check_bullet_alien_collisions(self):
         if len(self.aliens) == 0:
             # Destroy existing bullets and create new fleet.
             self.bullets.empty()
@@ -131,6 +134,10 @@ class AlienInvasion:
         """Update the position of every alien."""
         self._check_fleet_edges()
         self.aliens.update()
+
+        # check for alien-ship collision
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            print("Ship hit!!!")
 
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
