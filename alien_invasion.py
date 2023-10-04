@@ -8,6 +8,7 @@ from src.ship import Ship
 from src.bullet import Bullet
 from src.alien import Alien
 from src.game_stats import GameStats
+from src.button import Button
 
 
 class AlienInvasion:
@@ -23,6 +24,8 @@ class AlienInvasion:
             (self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Alien Invasion")
 
+        # Make the Play button
+        self.play_button = Button(self, "Play")
         # create  an instance  to store game statistics
         self.stats = GameStats(self)
 
@@ -183,12 +186,18 @@ class AlienInvasion:
                 self._ship_hit()
                 break
 
+    def _draw_button(self):
+        """Draw the button"""
+        if not self.game_active:
+            self.play_button.draw_button()
+
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.ship.blit_me()
+        self._draw_button()
         self.aliens.draw(self.screen)
 
         pygame.display.flip()
