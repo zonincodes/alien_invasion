@@ -36,7 +36,7 @@ class AlienInvasion:
         self._create_fleet()
 
         # Start Alien invasion in an active state
-        self.game_active = True
+        self.game_active = False
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -59,6 +59,9 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                self._check_play_button(mouse_x, mouse_y)
 
     def _check_keydown_events(self, event):
         """Respond to key presses."""
@@ -70,6 +73,12 @@ class AlienInvasion:
             sys.exit()
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
+
+    def _check_play_button(self, mouse_x, mouse_y):
+        """Start a new game when the player clicks play."""
+        # print(f"({mouse_x}, {mouse_y})")
+        if self.play_button.rect.collidepoint(mouse_x, mouse_y):
+            self.game_active = True
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
