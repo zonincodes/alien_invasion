@@ -97,6 +97,7 @@ class AlienInvasion:
             pygame.mouse.set_visible(False)
             # Reset the game stats
             self.stats.reset_stats()
+            self.settings.initialize_dynamic_settings()
 
             # Empty the list of aliens and bullets.
             self.aliens.empty()
@@ -133,6 +134,7 @@ class AlienInvasion:
         if not self.aliens:
             # Destroy existing bullets and create new fleet.
             self.bullets.empty()
+            self.settings.increase_speed()
             self._create_fleet()
 
     def _ship_hit(self):
