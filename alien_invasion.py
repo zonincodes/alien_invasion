@@ -73,12 +73,8 @@ class AlienInvasion:
             sys.exit()
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
-
-    def _check_play_button(self, mouse_x, mouse_y):
-        """Start a new game when the player clicks play."""
-        # print(f"({mouse_x}, {mouse_y})")
-        if self.play_button.rect.collidepoint(mouse_x, mouse_y):
-            self.game_active = True
+        elif event.key == pygame.K_s:
+            self._stop_game()
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
@@ -86,6 +82,29 @@ class AlienInvasion:
             self.ship.moving_right = False
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = False
+
+    def _stop_game(self):
+        """Pause the game"""
+        self.game_active = False
+        pygame.mouse.set_visible(True)
+
+    def _check_play_button(self, mouse_x, mouse_y):
+        """Start a new game when the player clicks play."""
+        # print(f"({mouse_x}, {mouse_y})")
+        button_clicked = self.play_button.rect.collidepoint(mouse_x, mouse_y)
+        if button_clicked and not self.game_active:
+            self.game_active = True
+            pygame.mouse.set_visible(False)
+            # Reset the game stats
+            self.stats.reset_stats()
+
+            # Empty the list of aliens and bullets.
+            self.aliens.empty()
+            self.bullets.empty()
+
+            # Create a new fleet and center the ship
+            self._create_fleet()
+            self.ship.center_ship()
 
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group."""
@@ -135,6 +154,7 @@ class AlienInvasion:
 
         else:
             self.game_active = False
+            pygame.mouse.set_visible(True)
 
     def _create_fleet(self):
         """Create the fleet of aliens."""
@@ -203,11 +223,15 @@ class AlienInvasion:
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
-        for bullet in self.bullets.sprites():
-            bullet.draw_bullet()
-        self.ship.blit_me()
+
+        # Draw  ship and fleet only if game is active
         self._draw_button()
-        self.aliens.draw(self.screen)
+
+        if self.game_active:
+            self.aliens.draw(self.screen)
+            for bullet in self.bullets.sprites():
+                bullet.draw_bullet()
+            self.ship.blit_me()
 
         pygame.display.flip()
 
